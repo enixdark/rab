@@ -17,6 +17,11 @@ channel.exchange_declare(exchange = EXCHANGE_NAME, type ="direct",
 channel.queue_declare(queue = QUEUE_NAME)
 channel.queue_bind(queue = QUEUE_NAME, exchange=EXCHANGE_NAME, routing_key=ROUTING)
 
+
+#user mirror queue for cluster 
+# queue_args = {"x-ha-policy" : "all"}
+# channel.queue_declare(queue="hello-queue", arguments=queue_args)
+# queue_args = {"x-ha-policy" : "nodes", "x-ha-policy-params" : ["rabbit@Phantome"]}
 def msg_consumer(channel, method, header, body):
 	channel.basic_ack(delivery_tag=method.delivery_tag),
 	if body == "quit":
