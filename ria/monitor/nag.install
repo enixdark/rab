@@ -1,0 +1,59 @@
+#!/bin/bash
+# the script to install inagios on ubuntu
+sudo apt-get install build-essential apache2 \
+	php5-gd wget libgd2-xpm libgd2-xpm-dev libapache2-mod-php5 sendmail daemon
+sudo useradd nagios
+sudo groupadd nagcmd
+sudo usermod -a -G nagcmd 
+
+
+#download and install ad config nagios core from source code 
+wget https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.1.1.tar.gz
+tar xvf nagios-*.tar.gz
+cd nagios-*
+./configure --with-nagios-group=nagios --with-command-group=nagcmd 
+make all
+sudo make install
+sudo make install-commandmode
+sudo make install-init
+sudo make install-config
+sudo /usr/bin/install -c -m 644 sample-config/httpd.conf /etc/apache2/sites-available/nagios.conf
+
+sudo usermod -G nagcmd www-data
+
+cd ..
+#download and install nagios plugin from source code 
+curl -L -O http://nagios-plugins.org/download/nagios-plugins-2.1.1.tar.gz
+tar xvf nagios-plugins-*.tar.gz
+cd nagios-plugins-*
+./configure --with-nagios-user=nagios --with-nagios-group=nagios --with-openssl
+make 
+sudo make 
+
+cd ..
+wget http://downloads.sourceforge.net/project/nagios/nrpe-2.x/nrpe-2.15/nrpe-2.15.tar.gz
+tar xvf nrpe-*.tar.gz
+cd nrpe-*
+./configure --enable-command-args --with-nagios-user=nagios --with-nagios-group=nagios --with-ssl=/usr/bin/openssl --with-ssl-lib=/usr/lib/x86_64-linux-gnu
+make all
+sudo make install
+sudo make install-xinetd
+sudo make install-daemon-config
+
+echo "cfg_dir=/usr/local/nagios/etc/servers" >> /usr/local/nagios/etc/nagios.cfg
+sudo mkdir /usr/local/nagios/etc/servers
+echo "define command{
+        command_name check_nrpe
+        command_line $USER1$/check_nrpe -H $HOSTADDRESS$ -c $ARG1$
+}" >> /usr/local/nagios/etc/objects/commands.cfg
+
+sudo a2enmod rewrite
+sudo a2enmod cgi
+
+sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
+
+sudo ln -s /etc/apache2/sites-available/nagios.conf /etc/apache2/sites-enabled/
+
+sudo systemctl restart nagios.service
+sudo systemctl restart apache2.service
+

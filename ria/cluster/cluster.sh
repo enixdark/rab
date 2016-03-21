@@ -20,8 +20,8 @@ rabbitmqctl -n rabbit2@HOST_NAME stop_app
 rabbitmqctl -n rabbit1@HOST_NAME reset
 
 #reset node for node that become master
-rabbitmqctl -n rabbit1@HOST_NAME join_cluster rabbit@HOST_NAME
-rabbitmqctl -n rabbit2@HOST_NAME join_cluster rabbit@HOST_NAME
+rabbitmqctl -n rabbit1@HOST_NAME join_cluster rabbit@HOST_NAME --ram
+rabbitmqctl -n rabbit2@HOST_NAME join_cluster rabbit@HOST_NAME --ram
 
 rabbitmqctl -n rabbit1@HOST_NAME start_app
 rabbitmqctl -n rabbit2@HOST_NAME start_app
